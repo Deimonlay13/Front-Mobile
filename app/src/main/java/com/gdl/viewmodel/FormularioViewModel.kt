@@ -4,31 +4,31 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gdl.models.DireccionEntity
 import com.gdl.models.FormularioUiState
-import com.gdl.network.ApiClient
 import com.gdl.repository.DireccionRepository
 import com.gdl.repository.UsuarioRepository
+import com.gdl.network.ApiClient
+import com.gdl.network.ApiService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class FormularioViewModel(
-    private val usuarioRepository: UsuarioRepository = UsuarioRepository(ApiClient.api),
-    private val direccionRepository: DireccionRepository = DireccionRepository(ApiClient.api)
+    private val usuarioRepository: UsuarioRepository = UsuarioRepository(
+        ApiClient.retrofit.create(ApiService::class.java)
+    ),
+    private val direccionRepository: DireccionRepository = DireccionRepository(
+        ApiClient.retrofit.create(ApiService::class.java)
+    )
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FormularioUiState())
     val uiState: StateFlow<FormularioUiState> = _uiState
 
-
-    // ------------------------------------------------------------
-    // CARGA INICIAL (similar a useEffect en React)
-    // ------------------------------------------------------------
+    // CARGA INICIAL
     fun cargarDatosIniciales(idUsuario: Long) {
         viewModelScope.launch {
             try {
-                // Cargar usuario
                 val user = usuarioRepository.getUsuario(idUsuario)
-
                 _uiState.value = _uiState.value.copy(
                     nombre = user.nombre,
                     apellido = user.apellido,
@@ -36,10 +36,8 @@ class FormularioViewModel(
                     rut = user.rut
                 )
 
-                // Cargar dirección
                 try {
                     val direccion = direccionRepository.obtenerDireccion(idUsuario)
-
                     _uiState.value = _uiState.value.copy(
                         region = direccion.region,
                         comuna = direccion.comuna,
@@ -56,10 +54,7 @@ class FormularioViewModel(
         }
     }
 
-
-    // ------------------------------------------------------------
     // ACTUALIZACIÓN DE CAMPOS
-    // ------------------------------------------------------------
     fun onCorreoChange(v: String) = update { it.copy(correo = v) }
     fun onNombreChange(v: String) = update { it.copy(nombre = v) }
     fun onApellidoChange(v: String) = update { it.copy(apellido = v) }
@@ -70,18 +65,13 @@ class FormularioViewModel(
     fun onCalleChange(v: String) = update { it.copy(calle = v) }
     fun onNumeroChange(v: String) = update { it.copy(numero = v) }
 
-
     private fun update(block: (FormularioUiState) -> FormularioUiState) {
         _uiState.value = block(_uiState.value)
     }
 
-
-    // ------------------------------------------------------------
     // VALIDACIÓN
-    // ------------------------------------------------------------
     fun validarFormulario(): Boolean {
         val s = _uiState.value
-
         val camposInvalidos =
             s.correo.isBlank() ||
                     s.nombre.isBlank() ||
@@ -94,33 +84,24 @@ class FormularioViewModel(
             update { it.copy(validated = true) }
             return false
         }
-
         update { it.copy(validated = true) }
         return true
     }
 
-
-    // ------------------------------------------------------------
     // GUARDAR DIRECCIÓN
-    // ------------------------------------------------------------
     fun guardarDireccion(idUsuario: Long) {
         viewModelScope.launch {
             try {
                 update { it.copy(isSaving = true) }
-
                 val s = _uiState.value
-
                 val direccion = DireccionEntity(
                     region = s.region,
                     comuna = if (s.comuna == "otra") s.otraComuna else s.comuna,
                     calle = s.calle,
                     numero = s.numero
                 )
-
                 direccionRepository.guardarDireccion(idUsuario, direccion)
-
                 mostrarModal("Dirección guardada", "✔ La dirección se ha guardado correctamente.")
-
             } catch (_: Exception) {
                 mostrarModal("Error", "Ocurrió un error al guardar la dirección.")
             } finally {
@@ -129,20 +110,13 @@ class FormularioViewModel(
         }
     }
 
-
-    // ------------------------------------------------------------
     // CONTINUAR AL PAGO
-    // ------------------------------------------------------------
     fun continuarConPago() {
         if (!validarFormulario()) return
-
         update { it.copy(showSuccess = true, navigateToPago = true) }
     }
 
-
-    // ------------------------------------------------------------
     // MODALES
-    // ------------------------------------------------------------
     fun mostrarModal(titulo: String, mensaje: String) {
         update { it.copy(showModal = true, modalTitle = titulo, modalMessage = mensaje) }
     }
