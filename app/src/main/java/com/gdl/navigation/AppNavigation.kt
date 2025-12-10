@@ -11,6 +11,8 @@ import com.gdl.view.LoginScreen
 import com.gdl.view.PokeListScreen
 import com.gdl.view.RegisterScreen
 import com.gdl.screens.CarritoScreen
+import com.gdl.view.FormularioScreen
+import com.gdl.viewmodel.FormularioViewModel
 import com.gdl.viewmodel.LoginViewModel
 import com.gdl.viewmodel.RegisterViewModel
 import com.gdl.viewmodel.PokeViewModel
@@ -20,6 +22,8 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object Carrito : Screen("carrito")
+
+    object Formulario : Screen("formulario")
 }
 
 @Composable
@@ -73,8 +77,17 @@ fun AppNavigation(navController: NavHostController) {
             CarritoScreen(
                 viewModel = pokeViewModel,
                 onVolver = {
-                    navController.popBackStack()
-                }
+                    navController.popBackStack() },
+                onComprar = { navController.navigate(Screen.Formulario.route) }
+            )
+        }
+
+        composable(Screen.Formulario.route) {
+            val formularioViewModel: FormularioViewModel = viewModel()
+            FormularioScreen(
+                idUsuario = 0L, // Aquí puedes pasar el id real si lo tienes
+                onNavigateToPago = { navController.navigate(Screen.Carrito.route) },
+                viewModel = formularioViewModel
             )
         }
     }

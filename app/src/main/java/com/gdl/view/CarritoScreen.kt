@@ -19,6 +19,7 @@ import androidx.compose.runtime.collectAsState
 @Composable
 fun CarritoScreen(
     viewModel: PokeViewModel,
+    onComprar: () -> Unit,
     onVolver: () -> Unit
 ) {
     val carrito = viewModel.carrito.collectAsState().value
@@ -77,9 +78,8 @@ fun CarritoScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // BOTÓN COMPRAR
         Button(
-            onClick = { /* Acción de compra */ },
+            onClick = { onComprar() },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF1E8C4E)
             ),
