@@ -1,36 +1,38 @@
 package com.gdl.navigation
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.gdl.view.LoginScreen
+import com.gdl.view.PokeListScreen
 import com.gdl.view.RegisterScreen
+import com.gdl.screens.CarritoScreen
 import com.gdl.viewmodel.LoginViewModel
 import com.gdl.viewmodel.RegisterViewModel
+import com.gdl.viewmodel.PokeViewModel
 
-// 👈 Esto faltaba
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
+    object Carrito : Screen("carrito")
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
     val context = LocalContext.current
     val loginViewModel: LoginViewModel = viewModel()
+    val pokeViewModel: PokeViewModel = viewModel() // <-- agregado
 
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+        // LOGIN
         composable(Screen.Login.route) {
             LoginScreen(
                 viewModel = loginViewModel,
@@ -45,6 +47,7 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
+        // REGISTER
         composable(Screen.Register.route) {
             val registerViewModel: RegisterViewModel = viewModel()
             RegisterScreen(
@@ -57,10 +60,21 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
+        // HOME
         composable(Screen.Home.route) {
-            Text(
-                text = "¡Bienvenido a Home!",
-                modifier = Modifier.fillMaxSize()
+            PokeListScreen(
+                navController = navController,
+                vm = pokeViewModel
+            )
+        }
+
+        // CARRITO
+        composable(Screen.Carrito.route) {
+            CarritoScreen(
+                viewModel = pokeViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                }
             )
         }
     }
