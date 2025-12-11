@@ -3,6 +3,8 @@ package com.gdl.view
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +28,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import coil.compose.AsyncImage
 import com.gdl.viewmodel.LoginViewModel
 import com.gdl.data.UserSession
 
@@ -47,76 +51,92 @@ fun LoginScreen(
     // Detecta login exitoso → guarda sesión y navega
     LaunchedEffect(uiState.loginResponse) {
 
-        val response = uiState.loginResponse  // 👈 solución
-
-        println("🟡 LaunchedEffect ACTIVADO. loginResponse = $response")
+        val response = uiState.loginResponse
 
         if (response != null && !uiState.isLoading) {
-            println("🟢 LoginScreen → LOGIN OK, guardando sesión...")
-
             session.saveUserSession(
-                response.id,      // 👈 ya no hay error
-                response.token
-            )
-
-            println("🧹 Reseteando estado para evitar re-login automático...")
+                response.id,
+                response.token)
             viewModel.resetLogin()
 
-            println("➡️ Navegando a Home...")
             onLoginSuccess()
         }
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
 
-        Header(title = "Bienvenido de nuevo")
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        LoginForm(
-            email = uiState.email,
-            password = uiState.password,
-            emailError = uiState.emailError,
-            passwordError = uiState.passwordError,
-            passwordVisible = uiState.passwordVisible,
-            isLoading = uiState.isLoading,
-            onEmailChange = viewModel::onEmailChange,
-            onPasswordChange = viewModel::onPasswordChange,
-            onPasswordVisibilityToggle = viewModel::togglePasswordVisibility,
-            onLoginClick = viewModel::onLoginClick
+        AsyncImage(
+            model = "https://tcg.pokemon.com/assets/img/home/featured-switcher/booster-art-1-large-up.jpg",
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
 
-        TextButton(onClick = onNavigateToRegister) {
-            Text(
-                text = "¿No tienes cuenta? Regístrate",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.70f))
+        )
 
-        // Error message
-        AnimatedVisibility(
-            visible = uiState.errorMessage != null,
-            enter = fadeIn(),
-            exit = fadeOut()
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .verticalScroll(scrollState),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            ErrorMessage(
-                message = uiState.errorMessage ?: "",
-                onDismiss = viewModel::resetLogin
-            )
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Header(title = "Bienvenido de nuevo")
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            LoginForm(
+                email = uiState.email,
+                password = uiState.password,
+                emailError = uiState.emailError,
+                passwordError = uiState.passwordError,
+                passwordVisible = uiState.passwordVisible,
+                isLoading = uiState.isLoading,
+                onEmailChange = viewModel::onEmailChange,
+                onPasswordChange = viewModel::onPasswordChange,
+                onPasswordVisibilityToggle = viewModel::togglePasswordVisibility,
+                onLoginClick = viewModel::onLoginClick
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            TextButton(onClick = onNavigateToRegister) {
+                Row {
+                    Text(
+                        text = "¿No tienes cuenta? ",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Regístrate",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color(0xFFFFCC01) // Amarillo Pokémon
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = uiState.errorMessage != null,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                ErrorMessage(
+                    message = uiState.errorMessage ?: "",
+                    onDismiss = viewModel::resetLogin
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
@@ -137,11 +157,12 @@ private fun LoginForm(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = Color.Black.copy(alpha = 0.40f)
+        ),
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.75f))
     ) {
         Column(
             modifier = Modifier
@@ -149,14 +170,29 @@ private fun LoginForm(
                 .padding(24.dp)
         ) {
 
+            val yellow = Color(0xFFFFCC01)
+
             OutlinedTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = { Text("Email") },
-                placeholder = { Text("ejemplo@correo.com") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                label = { Text("Email", color = yellow) },
+                placeholder = { Text("ejemplo@correo.com", color = yellow.copy(alpha = 0.7f)) },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email", tint = yellow) },
                 modifier = Modifier.fillMaxWidth(),
                 isError = emailError != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = yellow,
+                    unfocusedBorderColor = yellow.copy(alpha = 0.6f),
+                    focusedLabelColor = yellow,
+                    cursorColor = yellow,
+                    unfocusedLabelColor = yellow,
+                    focusedLeadingIconColor = yellow,
+                    unfocusedLeadingIconColor = yellow,
+                    focusedPlaceholderColor = yellow.copy(alpha = 0.7f),
+                    unfocusedPlaceholderColor = yellow.copy(alpha = 0.5f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),
                 supportingText = {
                     if (emailError != null) {
                         Text(emailError, color = MaterialTheme.colorScheme.error)
@@ -175,21 +211,36 @@ private fun LoginForm(
             OutlinedTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = { Text("Contraseña") },
-                placeholder = { Text("Mínimo 6 caracteres") },
-                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Contraseña") },
+                label = { Text("Contraseña", color = yellow) },
+                placeholder = { Text("Mínimo 6 caracteres", color = yellow.copy(alpha = 0.7f)) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Contraseña", tint = yellow) },
                 trailingIcon = {
                     IconButton(onClick = onPasswordVisibilityToggle) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                            contentDescription = null,
+                            tint = yellow
                         )
                     }
                 },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 isError = passwordError != null,
-                supportingText = {
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = yellow,
+                    unfocusedBorderColor = yellow.copy(alpha = 0.6f),
+                    focusedLabelColor = yellow,
+                    cursorColor = yellow,
+                    unfocusedLabelColor = yellow,
+                    focusedLeadingIconColor = yellow,
+                    unfocusedLeadingIconColor = yellow,
+                    focusedTrailingIconColor = yellow,
+                    unfocusedTrailingIconColor = yellow,
+                    focusedPlaceholderColor = yellow.copy(alpha = 0.7f),
+                    unfocusedPlaceholderColor = yellow.copy(alpha = 0.5f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),supportingText = {
                     if (passwordError != null) {
                         Text(passwordError, color = MaterialTheme.colorScheme.error)
                     }
@@ -207,7 +258,7 @@ private fun LoginForm(
             Button(
                 onClick = onLoginClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFB96CB3),
+                    containerColor = Color(0xFFFFCC01),
                     contentColor = Color.White
                 ),
                 modifier = Modifier

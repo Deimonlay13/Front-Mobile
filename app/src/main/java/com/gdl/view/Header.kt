@@ -18,14 +18,14 @@ fun Header(title: String) {
     ) {
 
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = title,
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold
             ),
-            color = Color(0xFFB96CB3)
+            color = Color(0xFFFFCC01)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
