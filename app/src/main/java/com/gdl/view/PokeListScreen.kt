@@ -22,15 +22,24 @@ fun PokeListScreen(
     navController: NavHostController,
     vm: PokeViewModel
 ) {
+    val carrito by vm.carrito.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // ⭐ Top Bar con botón de carrito
+        // ⭐ Top Bar con botón de carrito y badge
         TopAppBar(
             title = { Text("Cartas Pokémon") },
             actions = {
-                IconButton(onClick = { navController.navigate("carrito") }) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
+                BadgedBox(
+                    badge = {
+                        if (carrito.isNotEmpty()) {
+                            Badge { Text(carrito.sumOf { it.cantidad }.toString()) }
+                        }
+                    }
+                ) {
+                    IconButton(onClick = { navController.navigate("carrito") }) {
+                        Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
+                    }
                 }
             }
         )
