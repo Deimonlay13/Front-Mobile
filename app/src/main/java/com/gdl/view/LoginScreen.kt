@@ -226,7 +226,21 @@ private fun LoginForm(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 isError = passwordError != null,
-                supportingText = {
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = yellow,
+                    unfocusedBorderColor = yellow.copy(alpha = 0.6f),
+                    focusedLabelColor = yellow,
+                    cursorColor = yellow,
+                    unfocusedLabelColor = yellow,
+                    focusedLeadingIconColor = yellow,
+                    unfocusedLeadingIconColor = yellow,
+                    focusedTrailingIconColor = yellow,
+                    unfocusedTrailingIconColor = yellow,
+                    focusedPlaceholderColor = yellow.copy(alpha = 0.7f),
+                    unfocusedPlaceholderColor = yellow.copy(alpha = 0.5f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                ),supportingText = {
                     if (passwordError != null) {
                         Text(passwordError, color = MaterialTheme.colorScheme.error)
                     }
@@ -244,7 +258,7 @@ private fun LoginForm(
             Button(
                 onClick = onLoginClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFB96CB3),
+                    containerColor = Color(0xFFFFCC01),
                     contentColor = Color.White
                 ),
                 modifier = Modifier
