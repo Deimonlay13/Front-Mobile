@@ -46,12 +46,27 @@ fun LoginScreen(
 
     // Detecta login exitoso → guarda sesión y navega
     LaunchedEffect(uiState.loginResponse) {
-        uiState.loginResponse?.let { resp ->
-            // Guarda el id y token que devuelve el backend
-            session.saveUserSession(resp.id, resp.token)
+
+        val response = uiState.loginResponse  // 👈 solución
+
+        println("🟡 LaunchedEffect ACTIVADO. loginResponse = $response")
+
+        if (response != null && !uiState.isLoading) {
+            println("🟢 LoginScreen → LOGIN OK, guardando sesión...")
+
+            session.saveUserSession(
+                response.id,      // 👈 ya no hay error
+                response.token
+            )
+
+            println("🧹 Reseteando estado para evitar re-login automático...")
+            viewModel.resetLogin()
+
+            println("➡️ Navegando a Home...")
             onLoginSuccess()
         }
     }
+
 
     Column(
         modifier = modifier

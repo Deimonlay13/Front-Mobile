@@ -73,6 +73,10 @@ class LoginViewModel : ViewModel() {
     }
 
     fun resetLogin() {
-        _uiState.value = LoginUiState()
+        _uiState.value = _uiState.value.copy(
+            loginResponse = null,
+            errorMessage = null,
+            isLoading = false
+        )
     }
 }
