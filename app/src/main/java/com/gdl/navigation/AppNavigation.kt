@@ -1,12 +1,13 @@
 package com.gdl.navigation
 
 import android.widget.Toast
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.gdl.data.UserSession
 import com.gdl.view.LoginScreen
 import com.gdl.view.PokeListScreen
 import com.gdl.view.RegisterScreen
@@ -22,20 +23,27 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object Carrito : Screen("carrito")
-
     object Formulario : Screen("formulario")
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
+
     val context = LocalContext.current
+
+    // ViewModels
     val loginViewModel: LoginViewModel = viewModel()
-    val pokeViewModel: PokeViewModel = viewModel() // <-- agregado
+    val pokeViewModel: PokeViewModel = viewModel()
+
+    // UserSession (para obtener el idUsuario real)
+    val session = remember { UserSession(context) }
+    val idUsuario by session.getUserId().collectAsState(initial = 0L)
 
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+
         // LOGIN
         composable(Screen.Login.route) {
             LoginScreen(
@@ -77,16 +85,23 @@ fun AppNavigation(navController: NavHostController) {
             CarritoScreen(
                 viewModel = pokeViewModel,
                 onVolver = {
-                    navController.popBackStack() },
-                onComprar = { navController.navigate(Screen.Formulario.route) }
+                    navController.popBackStack()
+                },
+                onComprar = {
+                    navController.navigate(Screen.Formulario.route)
+                }
             )
         }
 
+        // FORMULARIO
         composable(Screen.Formulario.route) {
             val formularioViewModel: FormularioViewModel = viewModel()
+
             FormularioScreen(
-                idUsuario = 0L, // Aquí puedes pasar el id real si lo tienes
-                onNavigateToPago = { navController.navigate(Screen.Carrito.route) },
+                idUsuario = idUsuario,      // ✔ ahora recibe el id REAL
+                onNavigateToPago = {
+                    navController.navigate(Screen.Carrito.route)
+                },
                 viewModel = formularioViewModel
             )
         }
