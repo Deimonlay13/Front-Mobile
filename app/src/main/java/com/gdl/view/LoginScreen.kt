@@ -50,15 +50,22 @@ fun LoginScreen(
 
     // Detecta login exitoso → guarda sesión y navega
     LaunchedEffect(uiState.loginResponse) {
-        uiState.loginResponse?.let { resp ->
-            session.saveUserSession(resp.id, resp.token)
+
+        val response = uiState.loginResponse
+
+        if (response != null && !uiState.isLoading) {
+            session.saveUserSession(
+                response.id,
+                response.token)
+            viewModel.resetLogin()
+
             onLoginSuccess()
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // 🌌 Fondo desde URL
+
         AsyncImage(
             model = "https://tcg.pokemon.com/assets/img/home/featured-switcher/booster-art-1-large-up.jpg",
             contentDescription = null,
@@ -66,14 +73,14 @@ fun LoginScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 🟤 Capa oscura para contraste
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.70f))
         )
 
-        // ✨ Contenido del login
+
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -133,8 +140,6 @@ fun LoginScreen(
     }
 }
 
-// -------------------------------------------------------------
-
 @Composable
 private fun LoginForm(
     email: String,
@@ -155,9 +160,9 @@ private fun LoginForm(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Black.copy(alpha = 0.40f) // Transparencia elegante
+            containerColor = Color.Black.copy(alpha = 0.40f)
         ),
-        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.75f)) // Borde glass
+        border = BorderStroke(1.dp, Color.Black.copy(alpha = 0.75f))
     ) {
         Column(
             modifier = Modifier
@@ -221,21 +226,6 @@ private fun LoginForm(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
                 isError = passwordError != null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = yellow,
-                    unfocusedBorderColor = yellow.copy(alpha = 0.6f),
-                    focusedLabelColor = yellow,
-                    cursorColor = yellow,
-                    unfocusedLabelColor = yellow,
-                    focusedLeadingIconColor = yellow,
-                    unfocusedLeadingIconColor = yellow,
-                    focusedTrailingIconColor = yellow,
-                    unfocusedTrailingIconColor = yellow,
-                    focusedPlaceholderColor = yellow.copy(alpha = 0.7f),
-                    unfocusedPlaceholderColor = yellow.copy(alpha = 0.5f),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                ),
                 supportingText = {
                     if (passwordError != null) {
                         Text(passwordError, color = MaterialTheme.colorScheme.error)
@@ -254,8 +244,8 @@ private fun LoginForm(
             Button(
                 onClick = onLoginClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFCC01),
-                    contentColor = Color.Black
+                    containerColor = Color(0xFFB96CB3),
+                    contentColor = Color.White
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

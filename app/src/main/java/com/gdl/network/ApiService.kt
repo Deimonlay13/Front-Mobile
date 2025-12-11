@@ -1,11 +1,14 @@
 package com.gdl.network
 
+import com.gdl.models.Detalle
 import com.gdl.models.UsuarioEntity
 import com.gdl.models.DireccionEntity
 import retrofit2.http.*
 import com.gdl.models.LoginRequest
 import com.gdl.models.LoginResponse
 import com.gdl.models.RegisterRequest
+import com.gdl.models.Venta
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -29,6 +32,9 @@ interface ApiService {
     ): UsuarioEntity
 
 
+    @DELETE("usuario/{id}")
+    suspend fun deleteUsuario(@Path("id") id: Long): Response<Unit>
+
     // =======================
     //   DIRECCIÓN
     // =======================
@@ -45,4 +51,14 @@ interface ApiService {
     ): DireccionEntity
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): String
+
+
+    @GET("venta/usuario/{idUsuario}")
+    suspend fun getVentasByUsuario(@Path("idUsuario") idUsuario: Long): List<Venta>
+
+    @GET("detalle-venta/venta/{idVenta}")
+    suspend fun getDetallesByVenta(@Path("idVenta") idVenta: Long): List<Detalle>
 }
+
+
+
