@@ -4,64 +4,73 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gdl.models.DireccionEntity
 import com.gdl.models.FormularioUiState
-import com.gdl.repository.DireccionRepository
-import com.gdl.repository.UsuarioRepository
+import com.gdl.models.UsuarioEntity
 import com.gdl.network.ApiClient
 import com.gdl.network.ApiService
+import com.gdl.repository.UserRepository
+import com.gdl.repository.DireccionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class FormularioViewModel(
-    private val usuarioRepository: UsuarioRepository = UsuarioRepository(
-        ApiClient.retrofit.create(ApiService::class.java)
-    ),
-    private val direccionRepository: DireccionRepository = DireccionRepository(
+class FormularioViewModel : ViewModel() {
+
+    private val userRepository = UserRepository(
         ApiClient.retrofit.create(ApiService::class.java)
     )
-) : ViewModel() {
+
+    private val direccionRepository = DireccionRepository(
+        ApiClient.retrofit.create(ApiService::class.java)
+    )
 
     private val _uiState = MutableStateFlow(FormularioUiState())
     val uiState: StateFlow<FormularioUiState> = _uiState
 
-    // CARGA INICIAL
+
+    // ============================================================
+    //   CARGAR DATOS INICIALES
+    // ============================================================
     fun cargarDatosIniciales(idUsuario: Long) {
+        if (idUsuario == 0L) return
+
         viewModelScope.launch {
             try {
-                val user = usuarioRepository.getUsuario(idUsuario)
+                // Datos del usuario
+                val usuario = userRepository.getUsuario(idUsuario)
+
                 _uiState.value = _uiState.value.copy(
-                    nombre = user.nombre,
-                    apellido = user.apellido,
-                    correo = user.email,
-                    rut = user.rut
+                    nombre = usuario.nombre,
+                    apellido = usuario.apellido,
+                    correo = usuario.email,
+                    rut = usuario.rut
                 )
 
+                // Dirección (si existe)
                 try {
                     val direccion = direccionRepository.obtenerDireccion(idUsuario)
+
                     _uiState.value = _uiState.value.copy(
                         region = direccion.region,
                         comuna = direccion.comuna,
                         calle = direccion.calle,
-                        numero = direccion.numero
+                        numero = direccion.numero.toString()
                     )
                 } catch (_: Exception) {
-                    // No tiene dirección → ignoramos
+                    // Usuario aún no tiene dirección
                 }
 
-            } catch (_: Exception) {
-                mostrarModal("Error", "No se pudo cargar la información del usuario.")
+            } catch (e: Exception) {
+                mostrarModal("Error", "No se pudieron cargar los datos del usuario.")
             }
         }
     }
 
-    // ACTUALIZACIÓN DE CAMPOS
-    fun onCorreoChange(v: String) = update { it.copy(correo = v) }
-    fun onNombreChange(v: String) = update { it.copy(nombre = v) }
-    fun onApellidoChange(v: String) = update { it.copy(apellido = v) }
-    fun onRutChange(v: String) = update { it.copy(rut = v) }
-    fun onRegionChange(v: String) = update { it.copy(region = v, comuna = "", otraComuna = "") }
+
+    // ============================================================
+    //   CAMPOS EDITABLES
+    // ============================================================
+    fun onRegionChange(v: String) = update { it.copy(region = v) }
     fun onComunaChange(v: String) = update { it.copy(comuna = v) }
-    fun onOtraComunaChange(v: String) = update { it.copy(otraComuna = v) }
     fun onCalleChange(v: String) = update { it.copy(calle = v) }
     fun onNumeroChange(v: String) = update { it.copy(numero = v) }
 
@@ -69,55 +78,68 @@ class FormularioViewModel(
         _uiState.value = block(_uiState.value)
     }
 
-    // VALIDACIÓN
-    fun validarFormulario(): Boolean {
+
+    // ============================================================
+    //   VALIDACIÓN
+    // ============================================================
+    private fun validarFormulario(): Boolean {
         val s = _uiState.value
-        val camposInvalidos =
-            s.correo.isBlank() ||
-                    s.nombre.isBlank() ||
-                    s.apellido.isBlank() ||
-                    s.rut.isBlank() ||
+
+        val invalid =
+            s.region.isBlank() ||
+                    s.comuna.isBlank() ||
                     s.calle.isBlank() ||
                     s.numero.isBlank()
 
-        if (camposInvalidos) {
-            update { it.copy(validated = true) }
-            return false
-        }
         update { it.copy(validated = true) }
-        return true
+
+        return !invalid
     }
 
-    // GUARDAR DIRECCIÓN
+
+    // ============================================================
+    //   GUARDAR DIRECCIÓN
+    // ============================================================
     fun guardarDireccion(idUsuario: Long) {
+        if (!validarFormulario()) return
+
         viewModelScope.launch {
             try {
-                update { it.copy(isSaving = true) }
                 val s = _uiState.value
+
                 val direccion = DireccionEntity(
                     region = s.region,
-                    comuna = if (s.comuna == "otra") s.otraComuna else s.comuna,
+                    comuna = s.comuna,
                     calle = s.calle,
-                    numero = s.numero
+                    numero = s.numero.toIntOrNull()
                 )
-                direccionRepository.guardarDireccion(idUsuario, direccion)
-                mostrarModal("Dirección guardada", "✔ La dirección se ha guardado correctamente.")
-            } catch (_: Exception) {
-                mostrarModal("Error", "Ocurrió un error al guardar la dirección.")
-            } finally {
-                update { it.copy(isSaving = false) }
+
+                // POST /direccion/usuario/{idUsuario}
+                direccionRepository.agregarDireccion(idUsuario, direccion)
+
+                mostrarModal("Dirección guardada", "Tu dirección se guardó correctamente.")
+
+            } catch (e: Exception) {
+                mostrarModal("Error", "Ocurrió un problema al guardar tu dirección.")
             }
         }
     }
 
-    // CONTINUAR AL PAGO
+
+    // ============================================================
+    //   CONTINUAR
+    // ============================================================
     fun continuarConPago() {
-        if (!validarFormulario()) return
-        update { it.copy(showSuccess = true, navigateToPago = true) }
+        if (validarFormulario()) {
+            update { it.copy(navigateToPago = true) }
+        }
     }
 
-    // MODALES
-    fun mostrarModal(titulo: String, mensaje: String) {
+
+    // ============================================================
+    //   MODALES
+    // ============================================================
+    private fun mostrarModal(titulo: String, mensaje: String) {
         update { it.copy(showModal = true, modalTitle = titulo, modalMessage = mensaje) }
     }
 

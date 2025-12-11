@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.text.font.FontWeight
 import com.gdl.viewmodel.LoginViewModel
+import com.gdl.data.UserSession
+
 
 @Composable
 fun LoginScreen(
@@ -40,10 +42,13 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val session = remember { UserSession(context) }
 
-    // Detecta login exitoso
+    // Detecta login exitoso → guarda sesión y navega
     LaunchedEffect(uiState.loginResponse) {
-        uiState.loginResponse?.let {
+        uiState.loginResponse?.let { resp ->
+            // Guarda el id y token que devuelve el backend
+            session.saveUserSession(resp.id, resp.token)
             onLoginSuccess()
         }
     }
@@ -84,7 +89,7 @@ fun LoginScreen(
             )
         }
 
-        // Mostrar mensaje de error si lo hay
+        // Error message
         AnimatedVisibility(
             visible = uiState.errorMessage != null,
             enter = fadeIn(),
@@ -197,7 +202,10 @@ private fun LoginForm(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 } else {
                     Text(
                         text = "Iniciar Sesión",
@@ -217,7 +225,9 @@ private fun ErrorMessage(message: String, onDismiss: () -> Unit) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {

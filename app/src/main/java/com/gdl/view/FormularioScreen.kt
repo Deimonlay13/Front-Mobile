@@ -4,8 +4,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -22,12 +20,13 @@ fun FormularioScreen(
 ) {
     val state = viewModel.uiState.collectAsState().value
 
-    // Cargar datos iniciales
-    LaunchedEffect(Unit) {
+    // Cargar datos cuando entramos
+    LaunchedEffect(idUsuario) {
+        println("⚠ ID RECIBIDO FORMULARIO = $idUsuario")  // Debug
         viewModel.cargarDatosIniciales(idUsuario)
     }
 
-    // Navegación
+    // Navegación automática
     LaunchedEffect(state.navigateToPago) {
         if (state.navigateToPago) onNavigateToPago()
     }
@@ -38,246 +37,138 @@ fun FormularioScreen(
             .padding(16.dp)
     ) {
 
+        // ============================================================
+        // TÍTULO
+        // ============================================================
         Text(
-            text = "Completa tus datos para procesar tu compra",
-            style = MaterialTheme.typography.titleMedium
+            text = "Completa tu información",
+            style = MaterialTheme.typography.titleLarge
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // ==========================
-        // CORREO
-        // ==========================
-        OutlinedTextField(
-            value = state.correo,
-            onValueChange = { viewModel.onCorreoChange(it) },
-            label = { Text("Correo electrónico *") },
-            isError = state.validated && state.correo.isBlank(),
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-        )
-        if (state.validated && state.correo.isBlank()) {
-            Text("Ingresa un correo válido.", color = MaterialTheme.colorScheme.error)
-        }
+        // ============================================================
+        // DATOS PERSONALES (READONLY)
+        // ============================================================
+        Text("Datos personales", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
 
-        Spacer(Modifier.height(16.dp))
-
-        // ==========================
-        // NOMBRE
-        // ==========================
         OutlinedTextField(
             value = state.nombre,
-            onValueChange = { viewModel.onNombreChange(it) },
-            label = { Text("Nombre *") },
-            isError = state.validated && state.nombre.isBlank(),
+            onValueChange = {},
+            label = { Text("Nombre") },
+            readOnly = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.validated && state.nombre.isBlank()) {
-            Text("Este campo es obligatorio.", color = MaterialTheme.colorScheme.error)
-        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-        // ==========================
-        // APELLIDO
-        // ==========================
         OutlinedTextField(
             value = state.apellido,
-            onValueChange = { viewModel.onApellidoChange(it) },
-            label = { Text("Apellido *") },
-            isError = state.validated && state.apellido.isBlank(),
+            onValueChange = {},
+            label = { Text("Apellido") },
+            readOnly = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.validated && state.apellido.isBlank()) {
-            Text("Este campo es obligatorio.", color = MaterialTheme.colorScheme.error)
-        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-        // ==========================
-        // RUT
-        // ==========================
+        OutlinedTextField(
+            value = state.correo,
+            onValueChange = {},
+            label = { Text("Correo") },
+            readOnly = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(8.dp))
+
         OutlinedTextField(
             value = state.rut,
-            onValueChange = { viewModel.onRutChange(it) },
-            label = { Text("RUT *") },
-            isError = state.validated && state.rut.isBlank(),
+            onValueChange = {},
+            label = { Text("RUT") },
+            readOnly = true,
             modifier = Modifier.fillMaxWidth()
         )
-        if (state.validated && state.rut.isBlank()) {
-            Text("Ingresa tu RUT.", color = MaterialTheme.colorScheme.error)
-        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // ==========================
-        // REGIÓN
-        // ==========================
-        var expandedRegion by remember { mutableStateOf(false) }
-        val regiones = listOf("Metropolitana", "Valparaíso", "Biobío")
 
-        ExposedDropdownMenuBox(
-            expanded = expandedRegion,
-            onExpandedChange = { expandedRegion = !expandedRegion }
-        ) {
-            OutlinedTextField(
-                value = state.region,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Región") },
-                trailingIcon = {
-                    IconButton(onClick = { expandedRegion = !expandedRegion }) {
-                        Icon(Icons.Default.ArrowDropDown, null)
-                    }
-                },
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-            )
+        // ============================================================
+        // DIRECCIÓN (EDITABLE)
+        // ============================================================
+        Text("Dirección", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
 
-            DropdownMenu(
-                expanded = expandedRegion,
-                onDismissRequest = { expandedRegion = false }
-            ) {
-                regiones.forEach { region ->
-                    DropdownMenuItem(
-                        text = { Text(region) },
-                        onClick = {
-                            viewModel.onRegionChange(region)
-                            expandedRegion = false
-                        }
-                    )
-                }
-            }
-        }
+        OutlinedTextField(
+            value = state.region,
+            onValueChange = { viewModel.onRegionChange(it) },
+            label = { Text("Región *") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.validated && state.region.isBlank()
+        )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-        // ==========================
-        // COMUNA
-        // ==========================
-        if (state.region.isNotBlank()) {
+        OutlinedTextField(
+            value = state.comuna,
+            onValueChange = { viewModel.onComunaChange(it) },
+            label = { Text("Comuna *") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.validated && state.comuna.isBlank()
+        )
 
-            val comunas = when (state.region) {
-                "Metropolitana" -> listOf("Santiago", "Puente Alto", "Maipú")
-                "Valparaíso" -> listOf("Valparaíso", "Viña del Mar", "Quilpué")
-                "Biobío" -> listOf("Concepción", "Talcahuano", "Hualpén")
-                else -> emptyList()
-            }
+        Spacer(Modifier.height(8.dp))
 
-            val opcionesComuna = comunas + "otra"
-            var expandedComuna by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = expandedComuna,
-                onExpandedChange = { expandedComuna = !expandedComuna }
-            ) {
-                OutlinedTextField(
-                    value = state.comuna,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Comuna") },
-                    trailingIcon = {
-                        IconButton(onClick = { expandedComuna = !expandedComuna }) {
-                            Icon(Icons.Default.ArrowDropDown, null)
-                        }
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                DropdownMenu(
-                    expanded = expandedComuna,
-                    onDismissRequest = { expandedComuna = false }
-                ) {
-                    opcionesComuna.forEach { comuna ->
-                        DropdownMenuItem(
-                            text = { Text(comuna) },
-                            onClick = {
-                                viewModel.onComunaChange(comuna)
-                                expandedComuna = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
-        // ==========================
-        // OTRA COMUNA
-        // ==========================
-        if (state.comuna == "otra") {
-            Spacer(Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = state.otraComuna,
-                onValueChange = { viewModel.onOtraComunaChange(it) },
-                label = { Text("Ingrese su comuna") },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
-
-        // ==========================
-        // CALLE
-        // ==========================
         OutlinedTextField(
             value = state.calle,
             onValueChange = { viewModel.onCalleChange(it) },
-            label = { Text("Dirección *") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Calle *") },
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.validated && state.calle.isBlank()
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-        // ==========================
-        // NÚMERO
-        // ==========================
         OutlinedTextField(
             value = state.numero,
             onValueChange = { viewModel.onNumeroChange(it) },
             label = { Text("Número *") },
-            modifier = Modifier.fillMaxWidth()
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+            isError = state.validated && state.numero.isBlank()
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
-        // ==========================
+
+        // ============================================================
         // BOTÓN GUARDAR
-        // ==========================
+        // ============================================================
         Button(
             onClick = { viewModel.guardarDireccion(idUsuario) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Guardar Dirección")
+            Text("Guardar dirección")
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // ==========================
-        // BOTÓN CONTINUAR AL PAGO
-        // ==========================
+        // ============================================================
+        // CONTINUAR
+        // ============================================================
         Button(
             onClick = { viewModel.continuarConPago() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Continuar con el pago")
         }
-
-        // ==========================
-        // ALERTA VERDE
-        // ==========================
-        if (state.showSuccess) {
-            Spacer(Modifier.height(16.dp))
-            Text("✔ Datos ingresados correctamente.", color = MaterialTheme.colorScheme.primary)
-        }
     }
 
-    // ==========================
+    // ============================================================
     // MODAL
-    // ==========================
+    // ============================================================
     if (state.showModal) {
         AlertDialog(
             onDismissRequest = { viewModel.cerrarModal() },
@@ -290,6 +181,4 @@ fun FormularioScreen(
             }
         )
     }
-
-
 }
