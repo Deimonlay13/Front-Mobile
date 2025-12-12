@@ -68,7 +68,9 @@ class PokeViewModel : ViewModel() {
 
         _carrito.value = listaActual
     }
-
+    fun limpiarCarrito() {
+        _carrito.value = emptyList()
+    }
 
 
     fun restarCantidad(producto: Producto) {

@@ -29,7 +29,6 @@ import com.gdl.viewmodel.FormularioViewModel
 fun FormularioScreen(
     idUsuario: Long,
     totalAmount: Int,
-    carrito: List<CarritoItem>,
     onNavigateToPago: (Int) -> Unit,
     viewModel: FormularioViewModel = viewModel()
 ) {
@@ -194,7 +193,7 @@ fun FormularioScreen(
                     // CONTINUAR PAGO
                     Button(
                         onClick = {
-                            viewModel.realizarCompra(idUsuario, carrito)
+                            viewModel.realizarCompra(idUsuario)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = yellow.copy(alpha = 0.85f),

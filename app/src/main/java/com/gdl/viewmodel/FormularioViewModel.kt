@@ -16,6 +16,17 @@ import kotlinx.coroutines.launch
 
 class FormularioViewModel : ViewModel() {
 
+    private val _carrito = MutableStateFlow<List<CarritoItem>>(emptyList())
+    val carrito: StateFlow<List<CarritoItem>> = _carrito
+
+    fun setCarrito(items: List<CarritoItem>) {
+        _carrito.value = items
+    }
+
+    fun limpiarCarrito() {
+        _carrito.value = emptyList()
+    }
+
     private val userRepository = UserRepository(
         ApiClient.retrofit.create(ApiService::class.java)
     )
@@ -127,19 +138,20 @@ class FormularioViewModel : ViewModel() {
     }
 
     // NUEVA FUNCIÓN: REGISTRAR COMPRA
-    fun realizarCompra(idUsuario: Long, carrito: List<CarritoItem>) {
+    fun realizarCompra(idUsuario: Long) {
         if (!validarFormulario()) return
 
         viewModelScope.launch {
             try {
                 val total = _uiState.value.totalAmount
+                val carritoActual = _carrito.value
 
                 compraRepository.guardarVenta(
                     idUsuario = idUsuario,
-                    carrito = carrito,
+                    carrito = carritoActual,
                     total = total
                 )
-
+                limpiarCarrito()
                 update { it.copy(navigateToPago = true) }
 
             } catch (e: Exception) {

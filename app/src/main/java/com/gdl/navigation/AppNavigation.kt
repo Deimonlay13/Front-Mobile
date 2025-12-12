@@ -172,7 +172,6 @@ fun AppNavigation(navController: NavHostController) {
                 FormularioScreen(
                     idUsuario = idUsuario,
                     totalAmount = total,
-                    carrito = pokeViewModel.carrito.collectAsState().value,
                     onNavigateToPago = { monto -> navController.navigate("pago/$monto") },
                     viewModel = formularioViewModel
                 )
@@ -188,6 +187,7 @@ fun AppNavigation(navController: NavHostController) {
                 PagoSimuladoScreen(
                     total = total,
                     onFinalizar = {
+                        pokeViewModel.limpiarCarrito()
                         Toast.makeText(context, "Compra realizada con éxito 🎉", Toast.LENGTH_SHORT)
                             .show()
                         navController.navigate(Screen.Home.route) {
