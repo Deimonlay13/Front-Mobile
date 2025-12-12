@@ -25,58 +25,82 @@ fun CarritoScreen(
     val carrito = viewModel.carrito.collectAsState().value
     val totalGeneral = carrito.sumOf { it.cantidad * it.producto.precio }
 
-    Column(
+    // BOX PARA EL FONDO
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
     ) {
 
-        // TOP BAR
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+        // 🔥 IMAGEN DE FONDO COMPLETA
+        AsyncImage(
+            model = "https://d1i787aglh9bmb.cloudfront.net/assets/img/me-expansions/me01/signup/sign-up-image-large-up.jpg",
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+
+        )
+
+        // 🔥 CAPA oscura para que se lea bien
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            IconButton(onClick = onVolver) {
-                Icon(
-                    Icons.Default.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = Color.Black
+
+            // TOP BAR
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                IconButton(onClick = onVolver) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = Color.White
+                    )
+                }
+
+                Text(
+                    text = "Tu carrito 🛒",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // LISTA DE ITEMS
+            carrito.forEach { item ->
+                CarritoItemRow(
+                    item = item,
+                    onSumar = { viewModel.agregarAlCarrito(item.producto, 1) },
+                    onRestar = { viewModel.restarCantidad(item.producto) },
+                    onEliminar = { viewModel.eliminarDelCarrito(item.producto) }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // TOTAL GENERAL
             Text(
-                text = "Tu carrito 🛒",
-                fontSize = 22.sp,
+                text = "Total: $${totalGeneral}",
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // LISTA DE ITEMS
-        carrito.forEach { item ->
-            CarritoItemRow(
-                item = item,
-                onSumar = { viewModel.agregarAlCarrito(item.producto, 1) },
-                onRestar = { viewModel.restarCantidad(item.producto) },
-                onEliminar = { viewModel.eliminarDelCarrito(item.producto) }
+                color = Color.White,
+                modifier = Modifier.align(Alignment.End)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // TOTAL GENERAL
-        Text(
-            text = "Total: $${totalGeneral}",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.End)
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
         Button(
             onClick = { onComprar(totalGeneral) },

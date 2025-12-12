@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.gdl.models.CarritoItem
+import coil.compose.AsyncImage
 import com.gdl.viewmodel.FormularioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,13 +37,14 @@ fun FormularioScreen(
     val scroll = rememberScrollState()
     val yellow = Color(0xFFFFCC01)
 
-    // Cargar datos al entrar
+    // Cargar datos cuando entramos
     LaunchedEffect(idUsuario) {
+        println("⚠ ID RECIBIDO FORMULARIO = $idUsuario")  // Debug
         viewModel.cargarDatosIniciales(idUsuario)
         viewModel.setTotal(totalAmount)
     }
 
-    // Navegar al pago
+    // Navegación automática
     LaunchedEffect(state.navigateToPago) {
         if (state.navigateToPago) {
             onNavigateToPago(state.totalAmount)
@@ -210,7 +212,9 @@ fun FormularioScreen(
         }
     }
 
+    // ============================================================
     // MODAL
+    // ============================================================
     if (state.showModal) {
         AlertDialog(
             onDismissRequest = { viewModel.cerrarModal() },
