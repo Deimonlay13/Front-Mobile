@@ -1,22 +1,29 @@
 package com.gdl.network
 
+import com.gdl.models.DetalleRequest
+import com.gdl.models.DetalleResponse
 import com.gdl.models.UsuarioEntity
 import com.gdl.models.DireccionEntity
 import retrofit2.http.*
 import com.gdl.models.LoginRequest
 import com.gdl.models.LoginResponse
 import com.gdl.models.RegisterRequest
-import retrofit2.http.Body
-import retrofit2.http.POST
+import com.gdl.models.VentaRequest
+import com.gdl.models.VentaResponse
 
 interface ApiService {
+
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
-    // =======================
-    //   USUARIO
-    // =======================
+    //   REGISTER
+    @POST("auth/register")
+    suspend fun register(
+        @Body request: RegisterRequest
+    ): String
 
+
+    //   USUARIO
     @GET("usuario/{id}")
     suspend fun getUsuarioById(
         @Path("id") id: Long
@@ -29,10 +36,7 @@ interface ApiService {
     ): UsuarioEntity
 
 
-    // =======================
     //   DIRECCIÓN
-    // =======================
-
     @GET("direccion/usuario/{idUsuario}")
     suspend fun getDireccionByUsuario(
         @Path("idUsuario") idUsuario: Long
@@ -43,6 +47,16 @@ interface ApiService {
         @Path("idUsuario") idUsuario: Long,
         @Body direccion: DireccionEntity
     ): DireccionEntity
-    @POST("auth/register")
-    suspend fun register(@Body request: RegisterRequest): String
+
+
+    //   VENTAS
+    @POST("venta")
+    suspend fun crearVenta(
+        @Body venta: VentaRequest
+    ): VentaResponse
+
+    @POST("detalle-venta")
+    suspend fun crearDetalle(
+        @Body detalle: DetalleRequest
+    ): DetalleResponse
 }

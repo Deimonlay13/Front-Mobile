@@ -82,5 +82,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
+    implementation("com.stripe:stripe-android:20.40.0")
+
 
 }
