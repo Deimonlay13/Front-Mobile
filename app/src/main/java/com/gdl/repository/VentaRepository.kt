@@ -28,7 +28,7 @@ class VentaRepository(private val api: ApiService) {
 
         val body = DetalleRequest(
             idVenta = idVenta,
-            idCarta = idCarta,
+            idProducto = idCarta,
             cantidad = cantidad,
             precio = precio
         )

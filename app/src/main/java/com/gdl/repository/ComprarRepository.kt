@@ -30,7 +30,7 @@ class CompraRepository(private val api: ApiService) {
 
                 val detalleRequest = DetalleRequest(
                     idVenta = idVenta,
-                    idCarta = item.producto.id.toLong(),
+                    idProducto = item.producto.id.toLong(),
                     cantidad = item.cantidad,
                     precio = item.producto.precio.toDouble()
                 )

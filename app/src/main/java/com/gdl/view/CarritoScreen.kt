@@ -1,5 +1,6 @@
 package com.gdl.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,8 @@ import androidx.compose.ui.unit.sp
 import com.gdl.view.CarritoItemRow
 import com.gdl.viewmodel.PokeViewModel
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 @Composable
 fun CarritoScreen(
@@ -102,17 +105,18 @@ fun CarritoScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
-            onClick = { onComprar(totalGeneral) },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF1E8C4E)
-            ),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp)
-        ) {
-            Text(text = "Comprar", fontSize = 18.sp, color = Color.White)
+            Button(
+                onClick = { onComprar(totalGeneral) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1E8C4E)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
+            ) {
+                Text(text = "Comprar", fontSize = 18.sp, color = Color.White)
+            }
         }
     }
 }
