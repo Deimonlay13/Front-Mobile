@@ -1,6 +1,8 @@
 package com.gdl.navigation
 
 import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -23,6 +25,7 @@ import com.gdl.view.RegisterScreen
 import com.gdl.screens.CarritoScreen
 import com.gdl.view.ComprasScreen
 import com.gdl.view.FormularioScreen
+import com.gdl.view.PagoSimuladoScreen
 import com.gdl.view.PerfilScreen
 import com.gdl.viewmodel.ComprasViewModel
 import com.gdl.viewmodel.ComprasViewModelFactory
@@ -38,17 +41,22 @@ sealed class Screen(val route: String) {
     object Register : Screen("register")
     object Home : Screen("home")
     object Carrito : Screen("carrito")
-    object Formulario : Screen("formulario")
-
+    object Formulario : Screen("formulario/{total}")
+    object Pago : Screen("pago/{total}")     // ← Simulado (NO Stripe)
     object Perfil : Screen("perfil")
+
     object Compras : Screen("compras")
-    data object Salir : Screen("salir")
+
+    object Salir : Screen("salir")
+
 }
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
 
     val context = LocalContext.current
+
+    // ViewModels
     val loginViewModel: LoginViewModel = viewModel()
     val pokeViewModel: PokeViewModel = viewModel()
     val session = remember { UserSession(context) }
@@ -111,24 +119,18 @@ fun AppNavigation(navController: NavHostController) {
                 PokeListScreen(navController, pokeViewModel)
             }
 
+            // CARRITO
             composable(Screen.Carrito.route) {
-                println("🛒 Estamos en CARRITO")
                 CarritoScreen(
                     viewModel = pokeViewModel,
                     onVolver = { navController.popBackStack() },
-                    onComprar = { navController.navigate(Screen.Formulario.route) }
+                    onComprar = {
+                        val total = pokeViewModel.totalCarrito
+                        navController.navigate("formulario/$total")
+                    }
                 )
             }
 
-            composable(Screen.Formulario.route) {
-                println("📄 Estamos en FORMULARIO")
-                val formularioViewModel: FormularioViewModel = viewModel()
-                FormularioScreen(
-                    idUsuario = idUsuario,
-                    onNavigateToPago = { navController.navigate(Screen.Carrito.route) },
-                    viewModel = formularioViewModel
-                )
-            }
             composable(Screen.Perfil.route) {
                 // Aquí usamos PerfilViewModelFactory para crear el ViewModel
                 val perfilViewModel: PerfilViewModel = viewModel(factory = perfilFactory)
@@ -154,6 +156,45 @@ fun AppNavigation(navController: NavHostController) {
                 )
             }
 
+            composable("formulario/{total}") { backStackEntry ->
+
+                val total = backStackEntry.arguments?.getString("total")?.toInt() ?: 0
+                val formularioViewModel: FormularioViewModel = viewModel()
+
+                // AHORA SÍ: idUsuario REAL desde la sesión
+                val idUsuario by session.getUserId().collectAsState(initial = 0L)
+
+                LaunchedEffect(idUsuario) {
+                    formularioViewModel.cargarDatosIniciales(idUsuario)
+                    formularioViewModel.setTotal(total)
+                }
+
+                FormularioScreen(
+                    idUsuario = idUsuario,
+                    totalAmount = total,
+                    onNavigateToPago = { monto -> navController.navigate("pago/$monto") },
+                    viewModel = formularioViewModel
+                )
+            }
+
+
+
+            // PAGO SIMULADO
+            composable("pago/{total}") { backStackEntry ->
+                val total = backStackEntry.arguments?.getString("total")?.toInt() ?: 0
+
+                // Pantalla súper simple de confirmación
+                PagoSimuladoScreen(
+                    total = total,
+                    onFinalizar = {
+                        pokeViewModel.limpiarCarrito()
+                        Toast.makeText(context, "Compra realizada con éxito 🎉", Toast.LENGTH_SHORT)
+                            .show()
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
-    }
-}
+    }}

@@ -1,5 +1,7 @@
 package com.gdl.network
 
+import com.gdl.models.DetalleRequest
+import com.gdl.models.DetalleResponse
 import com.gdl.models.Detalle
 import com.gdl.models.UsuarioEntity
 import com.gdl.models.DireccionEntity
@@ -11,12 +13,15 @@ import com.gdl.models.Venta
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST
+import com.gdl.models.VentaRequest
+import com.gdl.models.VentaResponse
 
 interface ApiService {
+
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
-    // =======================
+
     //   USUARIO
     // =======================
 
@@ -58,6 +63,18 @@ interface ApiService {
 
     @GET("detalle-venta/venta/{idVenta}")
     suspend fun getDetallesByVenta(@Path("idVenta") idVenta: Long): List<Detalle>
+
+
+    //   VENTAS
+    @POST("venta")
+    suspend fun crearVenta(
+        @Body venta: VentaRequest
+    ): VentaResponse
+
+    @POST("detalle-venta")
+    suspend fun crearDetalle(
+        @Body detalle: DetalleRequest
+    ): DetalleResponse
 }
 
 

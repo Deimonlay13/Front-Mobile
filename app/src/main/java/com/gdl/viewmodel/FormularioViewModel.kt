@@ -4,16 +4,28 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gdl.models.DireccionEntity
 import com.gdl.models.FormularioUiState
-import com.gdl.models.UsuarioEntity
+import com.gdl.models.CarritoItem
 import com.gdl.network.ApiClient
 import com.gdl.network.ApiService
-import com.gdl.repository.UserRepository
 import com.gdl.repository.DireccionRepository
+import com.gdl.repository.UserRepository
+import com.gdl.repository.CompraRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class FormularioViewModel : ViewModel() {
+
+    private val _carrito = MutableStateFlow<List<CarritoItem>>(emptyList())
+    val carrito: StateFlow<List<CarritoItem>> = _carrito
+
+    fun setCarrito(items: List<CarritoItem>) {
+        _carrito.value = items
+    }
+
+    fun limpiarCarrito() {
+        _carrito.value = emptyList()
+    }
 
     private val userRepository = UserRepository(
         ApiClient.retrofit.create(ApiService::class.java)
@@ -23,90 +35,69 @@ class FormularioViewModel : ViewModel() {
         ApiClient.retrofit.create(ApiService::class.java)
     )
 
+    private val compraRepository = CompraRepository(
+        ApiClient.retrofit.create(ApiService::class.java)
+    )
+
     private val _uiState = MutableStateFlow(FormularioUiState())
     val uiState: StateFlow<FormularioUiState> = _uiState
-
-
-    // ============================================================
-    //   CARGAR DATOS INICIALES
-    // ============================================================
-    fun cargarDatosIniciales(idUsuario: Long) {
-        if (idUsuario == 0L) return
-
-        viewModelScope.launch {
-            try {
-                // Datos del usuario
-                val usuario = userRepository.getUsuario(idUsuario)
-
-                _uiState.value = _uiState.value.copy(
-                    nombre = usuario.nombre,
-                    apellido = usuario.apellido,
-                    correo = usuario.email,
-                    rut = usuario.rut
-                )
-
-                // Dirección (si existe)
-                try {
-                    val direccion = direccionRepository.obtenerDireccion(idUsuario)
-
-                    _uiState.value = _uiState.value.copy(
-                        region = direccion.region,
-                        comuna = direccion.comuna,
-                        calle = direccion.calle,
-                        numero = direccion.numero.toString()
-                    )
-                } catch (_: Exception) {
-                    // Usuario aún no tiene dirección
-                }
-
-            } catch (e: Exception) {
-                mostrarModal("Error", "No se pudieron cargar los datos del usuario.")
-            }
-        }
-    }
-
-
-    // ============================================================
-    //   CAMPOS EDITABLES
-    // ============================================================
-    fun onRegionChange(v: String) = update { it.copy(region = v) }
-    fun onComunaChange(v: String) = update { it.copy(comuna = v) }
-    fun onCalleChange(v: String) = update { it.copy(calle = v) }
-    fun onNumeroChange(v: String) = update { it.copy(numero = v) }
 
     private fun update(block: (FormularioUiState) -> FormularioUiState) {
         _uiState.value = block(_uiState.value)
     }
 
-
-    // ============================================================
-    //   VALIDACIÓN
-    // ============================================================
-    private fun validarFormulario(): Boolean {
-        val s = _uiState.value
-
-        val invalid =
-            s.region.isBlank() ||
-                    s.comuna.isBlank() ||
-                    s.calle.isBlank() ||
-                    s.numero.isBlank()
-
-        update { it.copy(validated = true) }
-
-        return !invalid
-    }
-
-
-    // ============================================================
-    //   GUARDAR DIRECCIÓN
-    // ============================================================
-    fun guardarDireccion(idUsuario: Long) {
-        if (!validarFormulario()) return
+    // Cargar datos iniciales
+    fun cargarDatosIniciales(idUsuario: Long) {
+        if (idUsuario == 0L) return
 
         viewModelScope.launch {
             try {
-                val s = _uiState.value
+                val usuario = userRepository.getUsuario(idUsuario)
+                update {
+                    it.copy(
+                        nombre = usuario.nombre,
+                        apellido = usuario.apellido,
+                        correo = usuario.email,
+                        rut = usuario.rut
+                    )
+                }
 
+                try {
+                    val direccion = direccionRepository.obtenerDireccion(idUsuario)
+                    update {
+                        it.copy(
+                            region = direccion.region,
+                            comuna = direccion.comuna,
+                            calle = direccion.calle,
+                            numero = direccion.numero?.toString() ?: ""
+                        )
+                    }
+                } catch (_: Exception) { }
+
+            } catch (_: Exception) {
+                mostrarModal("Error", "No se pudieron cargar los datos del usuario.")
+            }
+        }
+    }
+
+    // Campos editables
+    fun onRegionChange(v: String) = update { it.copy(region = v) }
+    fun onComunaChange(v: String) = update { it.copy(comuna = v) }
+    fun onCalleChange(v: String) = update { it.copy(calle = v) }
+    fun onNumeroChange(v: String) = update { it.copy(numero = v) }
+
+    // Guardar dirección
+    fun guardarDireccion(idUsuario: Long) {
+        viewModelScope.launch {
+            val s = _uiState.value
+
+            if (s.region.isBlank() || s.comuna.isBlank() || s.calle.isBlank() || s.numero.isBlank()) {
+                update { it.copy(validated = true) }
+                mostrarModal("Campos incompletos", "Completa los campos obligatorios.")
+                return@launch
+            }
+
+            try {
                 val direccion = DireccionEntity(
                     region = s.region,
                     comuna = s.comuna,
@@ -114,31 +105,63 @@ class FormularioViewModel : ViewModel() {
                     numero = s.numero.toIntOrNull()
                 )
 
-                // POST /direccion/usuario/{idUsuario}
                 direccionRepository.agregarDireccion(idUsuario, direccion)
 
                 mostrarModal("Dirección guardada", "Tu dirección se guardó correctamente.")
 
-            } catch (e: Exception) {
-                mostrarModal("Error", "Ocurrió un problema al guardar tu dirección.")
+            } catch (_: Exception) {
+                mostrarModal("Error", "No se pudo guardar la dirección.")
             }
         }
     }
 
+    // VALIDAR
+    private fun validarFormulario(): Boolean {
+        val s = _uiState.value
 
-    // ============================================================
-    //   CONTINUAR
-    // ============================================================
-    fun continuarConPago() {
-        if (validarFormulario()) {
-            update { it.copy(navigateToPago = true) }
+        val invalid = s.region.isBlank() ||
+                s.comuna.isBlank() ||
+                s.calle.isBlank() ||
+                s.numero.isBlank()
+
+        if (invalid) update { it.copy(validated = true) }
+
+        return !invalid
+    }
+
+    fun setTotal(total: Int) {
+        update { it.copy(totalAmount = total) }
+    }
+
+    fun resetNavigation() {
+        update { it.copy(navigateToPago = false) }
+    }
+
+    // NUEVA FUNCIÓN: REGISTRAR COMPRA
+    fun realizarCompra(idUsuario: Long) {
+        if (!validarFormulario()) return
+
+        viewModelScope.launch {
+            try {
+                val total = _uiState.value.totalAmount
+                val carritoActual = _carrito.value
+
+                compraRepository.guardarVenta(
+                    idUsuario = idUsuario,
+                    carrito = carritoActual,
+                    total = total
+                )
+                limpiarCarrito()
+                update { it.copy(navigateToPago = true) }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                mostrarModal("Error", "Hubo un problema al registrar la compra.")
+            }
         }
     }
 
-
-    // ============================================================
-    //   MODALES
-    // ============================================================
+    // Modales
     private fun mostrarModal(titulo: String, mensaje: String) {
         update { it.copy(showModal = true, modalTitle = titulo, modalMessage = mensaje) }
     }

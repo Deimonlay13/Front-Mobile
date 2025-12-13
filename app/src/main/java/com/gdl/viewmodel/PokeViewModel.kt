@@ -22,6 +22,10 @@ class PokeViewModel : ViewModel() {
     private val _carrito = MutableStateFlow<List<CarritoItem>>(emptyList())
     val carrito: StateFlow<List<CarritoItem>> = _carrito
 
+    val totalCarrito: Int
+        get() = _carrito.value.sumOf { it.producto.precio * it.cantidad }
+
+
     init {
         cargarProductos()
     }
@@ -64,7 +68,9 @@ class PokeViewModel : ViewModel() {
 
         _carrito.value = listaActual
     }
-
+    fun limpiarCarrito() {
+        _carrito.value = emptyList()
+    }
 
 
     fun restarCantidad(producto: Producto) {

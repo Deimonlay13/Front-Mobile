@@ -1,5 +1,7 @@
 package com.gdl.models
 
+import java.time.temporal.TemporalAmount
+
 data class FormularioUiState(
     val nombre: String = "",
     val apellido: String = "",
@@ -18,6 +20,7 @@ data class FormularioUiState(
     val modalTitle: String = "",
     val modalMessage: String = "",
 
-    val navigateToPago: Boolean = false
+    val navigateToPago: Boolean = false,
+    val totalAmount: Int =0
 )
 
